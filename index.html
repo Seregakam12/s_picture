@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+  >
+  <meta name="theme-color" content="#eeeeec">
+  <title>Surprise Pictures</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #eeeeec;
+      color: #151515;
+      font-family: Arial, Helvetica, sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { font: inherit; }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 24px 18px 36px;
+    }
+
+    header { text-align: center; }
+
+    .eyebrow {
+      margin: 0 0 9px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font: normal 35px Georgia, serif;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      color: #555;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 22px 0 13px;
+      font-size: 12px;
+    }
+
+    .text-button {
+      padding: 10px 0 10px 12px;
+      border: 0;
+      background: transparent;
+      color: #111;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .frame {
+      padding: 17px;
+      border: 1px solid #050505;
+      border-radius: 4px;
+      background:
+        repeating-linear-gradient(
+          92deg,
+          transparent 0,
+          transparent 4px,
+          rgba(255,255,255,.06) 5px,
+          rgba(0,0,0,.3) 7px,
+          transparent 11px
+        ),
+        linear-gradient(115deg, #121212, #353535, #151515);
+      box-shadow: 0 12px 25px rgba(0,0,0,.22);
+    }
+
+    .tile {
+      position: relative;
+      background: #fff;
+      border: 1px solid #999;
+      box-shadow: 0 0 0 3px #111;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      background: #fff;
+      touch-action: none;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 21px 0 9px;
+      font-size: 12px;
+    }
+
+    .track {
+      height: 6px;
+      overflow: hidden;
+      border-radius: 4px;
+      background: #d2d2cf;
+    }
+
+    .fill {
+      width: 0;
+      height: 100%;
+      background: #111;
+    }
+
+    .hint {
+      min-height: 44px;
+      color: #555;
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .result {
+      display: none;
+      margin-top: 18px;
+      padding: 21px;
+      background: #fff;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+
+    h2 {
+      margin: 7px 0 13px;
+      font: normal 27px Georgia, serif;
+    }
+
+    .result p {
+      color: #555;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .button {
+      display: block;
+      width: 100%;
+      margin-top: 12px;
+      padding: 15px 10px;
+      border: 1px solid #111;
+      border-radius: 2px;
+      background: #111;
+      color: #fff;
+      text-decoration: none;
+      text-align: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .secondary {
+      background: #fff;
+      color: #111;
+    }
+
+    .small {
+      font-size: 12px !important;
+      color: #666;
+    }
+
+    .notice {
+      margin: 15px 0;
+      padding: 12px;
+      border: 1px solid #aaa;
+      background: #fff;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    footer {
+      margin-top: 25px;
+      color: #777;
+      text-align: center;
+      font-size: 10px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="app">
+    <header>
+      <p class="eyebrow">Маленькая игра · настоящий подарок</p>
+      <h1>Surprise Pictures</h1>
+      <p class="subtitle">
+        Поймай жёлудь. Открой рисунок.<br>
+        Подари его по-настоящему.
+      </p>
+    </header>
+
+    <div class="notice" id="bootNotice">
+      Игра загружается… Если надпись не исчезает, открой страницу
+      в Safari по веб-ссылке, а не в предпросмотре файла.
+    </div>
+
+    <noscript>
+      <div class="notice">
+        Для игры нужен JavaScript. Открой страницу в Safari
+        с включённым JavaScript.
+      </div>
+    </noscript>
+
+    <div class="toolbar">
+      <span id="levelLabel">Сюрприз 01 / 05</span>
+      <button class="text-button" id="skip" type="button">
+        Другой сюрприз
+      </button>
+    </div>
+
+    <div class="frame">
+      <div class="tile">
+        <canvas
+          id="game"
+          width="720"
+          height="720"
+          tabindex="0"
+          aria-label="Веди пальцем по плитке или используй стрелки клавиатуры, чтобы открыть рисунок."
+        ></canvas>
+      </div>
+    </div>
+
+    <div class="progress-row">
+      <span id="progressText">Рисунок ещё прячется</span>
+      <span id="percent">0%</span>
+    </div>
+
+    <div
+      class="track"
+      id="progress"
+      role="progressbar"
+      aria-label="Открытая часть рисунка"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      aria-valuenow="0"
+    >
+      <div class="fill" id="fill"></div>
+    </div>
+
+    <p class="hint" id="hint" role="status">
+      Коснись плитки и веди пальцем.<br>
+      Свинья пойдёт за ним и откроет рисунок копытами.
+    </p>
+
+    <section class="result" id="result">
+      <p class="eyebrow">Сюрприз открыт</p>
+      <h2 id="resultTitle"></h2>
+
+      <p>
+        Этот рисунок может стать настоящей керамической плиткой —
+        для тебя или в подарок.
+      </p>
+
+      <a
+        class="button"
+        id="order"
+        target="_blank"
+        rel="noopener noreferrer"
+        style="display:none"
+      >Заказать такую плитку</a>
+
+      <p class="small" id="orderNote">
+        В демоверсии ссылка заказа ещё не подключена.
+      </p>
+
+      <button class="button secondary" id="save" type="button">
+        Открыть рисунок для сохранения
+      </button>
+
+      <p class="small" id="saveHint" role="status">
+        На iPhone: открой рисунок, затем удерживай палец на картинке
+        и выбери сохранение в Фото.
+      </p>
+
+      <button class="text-button" id="next" type="button">
+        Следующий сюрприз →
+      </button>
+    </section>
+
+    <footer>ИГРА НА ЭКРАНЕ. КЕРАМИКА В РЕАЛЬНОСТИ.</footer>
+  </main>
+
+  <script>
+  (function () {
+    "use strict";
+
+    // Вставь сюда HTTPS-ссылку на свою мастерскую или чат.
+    var ORDER_URL = "";
+
+    var designs = [
+      { id: "love-01", title: "Ты — моё счастье", type: "love" },
+      { id: "birthday-01", title: "Пусть всё сбудется!", type: "cake" },
+      { id: "cat-01", title: "Кот разрешил отдыхать", type: "cat" },
+      { id: "dream-01", title: "Всё начинается с мечты", type: "moon" },
+      { id: "pig-01", title: "Хрю. И всё получится.", type: "pig" }
+    ];
+
+    function el(id) {
+      return document.getElementById(id);
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function distance(x, y) {
+      return Math.sqrt(x * x + y * y);
+    }
+
+    var canvas = el("game");
+    var ctx;
+    var art = document.createElement("canvas");
+    var artCtx;
+    var mask = document.createElement("canvas");
+    var maskCtx;
+
+    try {
+      ctx = canvas.getContext("2d");
+      art.width = art.height = 720;
+      artCtx = art.getContext("2d");
+      mask.width = mask.height = 360;
+      maskCtx = mask.getContext("2d");
+
+      if (!ctx || !artCtx || !maskCtx) {
+        throw new Error("Canvas unavailable");
+      }
+    } catch (error) {
+      el("bootNotice").textContent =
+        "Браузер не смог запустить графику. Открой страницу в Safari.";
+      return;
+    }
+
+    var level = 0;
+    var phase = "reveal";
+    var pig = { x: 80, y: 280, angle: -0.5 };
+    var acorn = { x: 270, y: 80, tx: 270, ty: 80, timer: 0 };
+    var input = { active: false, x: 80, y: 280 };
+    var keys = {};
+    var touchId = null;
+    var mouseDown = false;
+    var lastTouch = 0;
+    var walk = 0;
+    var clock = 0;
+    var eatingTime = 0;
+    var lastFrame = 0;
+    var marked = [];
+    var markedCount = 0;
+    var displayedProgress = -1;
+
+    // Сетка для оценки открытой площади.
+    // Не требует чтения пикселей Canvas на каждом кадре.
+    var GRID = 52;
+    var CELL = 312 / GRID;
+
+    function oval(c, x, y, rx, ry, fill, stroke) {
+      c.save();
+      c.translate(x, y);
+      c.scale(rx, ry);
+      c.beginPath();
+      c.arc(0, 0, 1, 0, Math.PI * 2);
+      c.restore();
+
+      if (fill) {
+        c.fillStyle = fill;
+        c.fill();
+      }
+
+      if (stroke) {
+        c.strokeStyle = stroke;
+        c.stroke();
+      }
+    }
+
+    function label(c, value, x, y, size, weight) {
+      c.fillStyle = "#111";
+      c.font = (weight || "bold") + " " + size + "px Arial";
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.fillText(value, x, y);
+    }
+
+    function star(c, x, y, r) {
+      c.beginPath();
+      for (var i = 0; i < 10; i++) {
+        var a = -Math.PI / 2 + i * Math.PI / 5;
+        var radius = i % 2 ? r * 0.44 : r;
+        var px = x + Math.cos(a) * radius;
+        var py = y + Math.sin(a) * radius;
+        if (i === 0) c.moveTo(px, py);
+        else c.lineTo(px, py);
+      }
+      c.closePath();
+      c.fillStyle = "#111";
+      c.fill();
+    }
+
+    function drawPig(c, x, y, angle, scale, step) {
+      c.save();
+      c.translate(x, y);
+      c.rotate(angle);
+      c.scale(scale, scale);
+      c.lineWidth = 1.8;
+      c.strokeStyle = "#111";
+
+      c.beginPath();
+      c.moveTo(-20, 0);
+      c.bezierCurveTo(-36, -10, -33, 13, -26, 5);
+      c.bezierCurveTo(-22, 0, -30, -4, -31, 1);
+      c.stroke();
+
+      var swing = Math.sin(step) * 3;
+      for (var side = -1; side <= 1; side += 2) {
+        oval(c, -10 + swing * side, side * 15, 5, 4, "#111");
+        oval(c, 10 - swing * side, side * 13, 5, 4, "#111");
+      }
+
+      oval(c, -3, 0, 22, 16, "#fafafa", "#111");
+      oval(c, -9, -3, 5, 7, "#ddd");
+      oval(c, 15, 0, 13, 12, "#fff", "#111");
+
+      for (var ear = -1; ear <= 1; ear += 2) {
+        c.beginPath();
+        c.moveTo(9, ear * 8);
+        c.lineTo(7, ear * 18);
+        c.lineTo(20, ear * 10);
+        c.closePath();
+        c.fillStyle = "#ddd";
+        c.fill();
+        c.stroke();
+      }
+
+      oval(c, 25, 0, 8, 7, "#ddd", "#111");
+      oval(c, 27, -2.5, 1.4, 1.4, "#111");
+      oval(c, 27, 2.5, 1.4, 1.4, "#111");
+      oval(c, 18, -7, 1.8, 1.8, "#111");
+      oval(c, 18, 7, 1.8, 1.8, "#111");
+
+      c.restore();
+    }
+
+    function drawDesign(c, design) {
+      c.fillStyle = "#fff";
+      c.fillRect(0, 0, 360, 360);
+      c.strokeStyle = "#111";
+      c.lineWidth = 2;
+      c.strokeRect(24, 24, 312, 312);
+      c.lineWidth = 0.8;
+      c.strokeRect(30, 30, 300, 300);
+
+      star(c, 45, 45, 5);
+      star(c, 315, 45, 5);
+      star(c, 45, 315, 5);
+      star(c, 315, 315, 5);
+
+      if (design.type === "love") {
+        c.beginPath();
+        c.moveTo(180, 187);
+        c.bezierCurveTo(65, 120, 126, 57, 180, 105);
+        c.bezierCurveTo(234, 57, 295, 120, 180, 187);
+        c.fillStyle = "#111";
+        c.fill();
+        label(c, "ТЫ — МОЁ", 180, 229, 27);
+        label(c, "СЧАСТЬЕ", 180, 264, 32);
+        label(c, "каждый день", 180, 296, 14, "normal");
+      }
+
+      if (design.type === "cake") {
+        c.lineWidth = 3;
+        c.fillStyle = "#eee";
+        c.fillRect(116, 145, 128, 56);
+        c.strokeRect(116, 145, 128, 56);
+
+        for (var x = 145; x <= 215; x += 35) {
+          c.strokeRect(x - 3, 119, 6, 26);
+          oval(c, x, 109, 4, 7, "#111");
+        }
+
+        star(c, 86, 98, 8);
+        star(c, 270, 116, 7);
+        star(c, 222, 72, 5);
+        label(c, "ПУСТЬ ВСЁ", 180, 246, 27);
+        label(c, "СБУДЕТСЯ!", 180, 281, 29);
+      }
+
+      if (design.type === "cat") {
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(120, 127);
+        c.lineTo(116, 81);
+        c.lineTo(151, 104);
+        c.quadraticCurveTo(180, 94, 209, 104);
+        c.lineTo(244, 81);
+        c.lineTo(240, 127);
+        c.bezierCurveTo(265, 207, 95, 207, 120, 127);
+        c.closePath();
+        c.fillStyle = "#f5f5f5";
+        c.fill();
+        c.stroke();
+
+        c.beginPath();
+        c.moveTo(141, 140);
+        c.quadraticCurveTo(150, 149, 159, 140);
+        c.moveTo(201, 140);
+        c.quadraticCurveTo(210, 149, 219, 140);
+        c.stroke();
+        oval(c, 180, 156, 5, 3, "#111");
+
+        for (var s = -1; s <= 1; s += 2) {
+          c.beginPath();
+          c.moveTo(180 + s * 41, 156);
+          c.lineTo(180 + s * 78, 149);
+          c.moveTo(180 + s * 41, 165);
+          c.lineTo(180 + s * 78, 174);
+          c.stroke();
+        }
+
+        label(c, "ДЕЛА ПОДОЖДУТ.", 180, 231, 23);
+        label(c, "КОТ РАЗРЕШИЛ.", 180, 266, 23);
+        label(c, "официально можно отдыхать", 180, 297, 13, "normal");
+      }
+
+      if (design.type === "moon") {
+        oval(c, 171, 138, 49, 49, "#111");
+        oval(c, 190, 123, 43, 43, "#fff");
+        star(c, 238, 93, 11);
+        star(c, 110, 96, 7);
+        star(c, 239, 174, 6);
+        label(c, "ВСЁ НАЧИНАЕТСЯ", 180, 231, 22);
+        label(c, "С МЕЧТЫ", 180, 271, 34);
+        label(c, "твоя — не исключение", 180, 301, 13, "normal");
+      }
+
+      if (design.type === "pig") {
+        drawPig(c, 180, 144, -Math.PI / 2, 2.1, 0);
+        label(c, "ХРЮ.", 180, 232, 42);
+        label(c, "И ВСЁ ПОЛУЧИТСЯ.", 180, 275, 22);
+        label(c, "маленькими шагами", 180, 300, 13, "normal");
+      }
+    }
+
+    function markCircle(x, y, r) {
+      var minX = clamp(Math.floor((x - r - 24) / CELL), 0, GRID - 1);
+      var maxX = clamp(Math.floor((x + r - 24) / CELL), 0, GRID - 1);
+      var minY = clamp(Math.floor((y - r - 24) / CELL), 0, GRID - 1);
+      var maxY = clamp(Math.floor((y + r - 24) / CELL), 0, GRID - 1);
+
+      for (var gy = minY; gy <= maxY; gy++) {
+        for (var gx = minX; gx <= maxX; gx++) {
+          var dx = 24 + (gx + 0.5) * CELL - x;
+          var dy = 24 + (gy + 0.5) * CELL - y;
+          var index = gy * GRID + gx;
+
+          if (!marked[index] && dx * dx + dy * dy <= r * r) {
+            marked[index] = true;
+            markedCount++;
+          }
+        }
+      }
+    }
+
+    function scratch() {
+      var cos = Math.cos(pig.angle);
+      var sin = Math.sin(pig.angle);
+
+      maskCtx.save();
+      maskCtx.globalCompositeOperation = "destination-out";
+      maskCtx.fillStyle = "#000";
+
+      for (var front = -10; front <= 10; front += 20) {
+        for (var side = -12; side <= 12; side += 24) {
+          var x = pig.x + front * cos - side * sin;
+          var y = pig.y + front * sin + side * cos;
+          maskCtx.beginPath();
+          maskCtx.arc(x, y, 15, 0, Math.PI * 2);
+          maskCtx.fill();
+          markCircle(x, y, 15);
+        }
+      }
+
+      maskCtx.restore();
+      updateProgress();
+    }
+
+    function updateProgress() {
+      // Последние небольшие островки покрытия открываются автоматически.
+      var value = Math.min(
+        100,
+        Math.floor(markedCount / (GRID * GRID * 0.86) * 100)
+      );
+
+      if (value === displayedProgress) return;
+      displayedProgress = value;
+
+      el("percent").textContent = value + "%";
+      el("fill").style.width = value + "%";
+      el("progress").setAttribute("aria-valuenow", String(value));
+
+      if (value >= 100 && phase === "reveal") {
+        phase = "catch";
+        maskCtx.clearRect(0, 0, 360, 360);
+        el("progressText").textContent = "Сюрприз открыт!";
+        el("hint").textContent =
+          "Жёлудь устал убегать. Подведи свинью к нему!";
+      } else if (value > 55) {
+        el("progressText").textContent = "Уже видно самое интересное";
+      } else if (value > 15) {
+        el("progressText").textContent = "Сюрприз проявляется";
+      }
+    }
+
+    function stopInput() {
+      input.active = false;
+      mouseDown = false;
+      touchId = null;
+      keys = {};
+    }
+
+    function reset(nextLevel) {
+      stopInput();
+      level = nextLevel % designs.length;
+      phase = "reveal";
+      marked = [];
+      markedCount = 0;
+      displayedProgress = -1;
+
+      pig.x = 80;
+      pig.y = 280;
+      pig.angle = -0.5;
+
+      acorn.x = 270;
+      acorn.y = 80;
+      acorn.tx = 270;
+      acorn.ty = 80;
+      acorn.timer = 0;
+
+      artCtx.setTransform(2, 0, 0, 2, 0, 0);
+      drawDesign(artCtx, designs[level]);
+
+      maskCtx.globalCompositeOperation = "source-over";
+      maskCtx.fillStyle = "#f3f3f1";
+      maskCtx.fillRect(0, 0, 360, 360);
+
+      for (var i = 0; i < 1600; i++) {
+        maskCtx.fillStyle = i % 2
+          ? "rgba(0,0,0,.025)"
+          : "rgba(255,255,255,.4)";
+        maskCtx.fillRect(Math.random() * 360, Math.random() * 360, 1, 1);
+      }
+
+      el("result").style.display = "none";
+      el("levelLabel").textContent = "Сюрприз 0" + (level + 1) + " / 05";
+      el("progressText").textContent = "Рисунок ещё прячется";
+      el("hint").textContent =
+        "Коснись плитки и веди пальцем. Свинья пойдёт за ним " +
+        "и откроет рисунок копытами.";
+
+      updateProgress();
+      draw();
+    }
+
+    function movePig(dt) {
+      var keyboard = keys[37] || keys[38] || keys[39] || keys[40];
+      var dx = 0;
+      var dy = 0;
+
+      if (keyboard) {
+        dx = (keys[39] ? 1 : 0) - (keys[37] ? 1 : 0);
+        dy = (keys[40] ? 1 : 0) - (keys[38] ? 1 : 0);
+      } else if (input.active) {
+        dx = input.x - pig.x;
+        dy = input.y - pig.y;
+      }
+
+      var d = distance(dx, dy);
+      if (d < 1) return;
+
+      var amount = keyboard ? 155 * dt : Math.min(d, 155 * dt);
+      var oldX = pig.x;
+      var oldY = pig.y;
+
+      pig.x = clamp(pig.x + dx / d * amount, 20, 340);
+      pig.y = clamp(pig.y + dy / d * amount, 20, 340);
+      pig.angle = Math.atan2(dy, dx);
+
+      if (distance(pig.x - oldX, pig.y - oldY) > 0.01) {
+        walk += dt * 20;
+        if (phase === "reveal") scratch();
+      }
+    }
+
+    function moveAcorn(dt) {
+      if (phase !== "reveal") return;
+
+      acorn.timer -= dt;
+      var near = distance(acorn.x - pig.x, acorn.y - pig.y);
+
+      if (
+        acorn.timer <= 0 ||
+        distance(acorn.tx - acorn.x, acorn.ty - acorn.y) < 12
+      ) {
+        var best = -1;
+        for (var i = 0; i < 12; i++) {
+          var x = 25 + Math.random() * 310;
+          var y = 25 + Math.random() * 310;
+          var score = distance(x - pig.x, y - pig.y);
+          if (score > best) {
+            best = score;
+            acorn.tx = x;
+            acorn.ty = y;
+          }
+        }
+        acorn.timer = near < 90 ? 0.25 : 1;
+      }
+
+      var dx = acorn.tx - acorn.x;
+      var dy = acorn.ty - acorn.y;
+      var d = distance(dx, dy) || 1;
+      dx /= d;
+      dy /= d;
+
+      if (near < 90) {
+        dx += (acorn.x - pig.x) / (near || 1) * 1.5;
+        dy += (acorn.y - pig.y) / (near || 1) * 1.5;
+      }
+
+      d = distance(dx, dy) || 1;
+      var speed = near < 95 ? 235 : 80;
+
+      acorn.x = clamp(acorn.x + dx / d * speed * dt, 18, 342);
+      acorn.y = clamp(acorn.y + dy / d * speed * dt, 18, 342);
+    }
+
+    function finish() {
+      phase = "done";
+      stopInput();
+      el("resultTitle").textContent = designs[level].title;
+      el("result").style.display = "block";
+      el("hint").textContent =
+        "Хрум! Жёлудь съеден. На плитке остался твой рисунок.";
+
+      if (/^https:\/\/\S+$/i.test(ORDER_URL)) {
+        el("order").href = ORDER_URL;
+        el("order").style.display = "block";
+        el("orderNote").style.display = "none";
+      } else {
+        el("order").style.display = "none";
+        el("orderNote").style.display = "block";
+      }
+    }
+
+    function drawAcorn() {
+      ctx.save();
+      ctx.translate(acorn.x, acorn.y + Math.sin(clock * 8) * 1.5);
+      ctx.rotate(Math.sin(clock * 6) * 0.15);
+
+      if (phase === "eating") {
+        var shrink = Math.max(0, 1 - eatingTime / 0.45);
+        ctx.scale(shrink, shrink);
+      }
+
+      ctx.lineWidth = 1.7;
+      oval(ctx, 0, 3, 8, 11, "#eee", "#111");
+
+      ctx.beginPath();
+      ctx.moveTo(-11, -3);
+      ctx.quadraticCurveTo(0, -16, 11, -3);
+      ctx.lineTo(10, 0);
+      ctx.lineTo(-10, 0);
+      ctx.closePath();
+      ctx.fillStyle = "#333";
+      ctx.fill();
+      ctx.strokeStyle = "#111";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(0, -10);
+      ctx.quadraticCurveTo(-1, -16, 4, -17);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function draw() {
+      ctx.setTransform(2, 0, 0, 2, 0, 0);
+      ctx.clearRect(0, 0, 360, 360);
+      ctx.drawImage(art, 0, 0, 360, 360);
+      ctx.drawImage(mask, 0, 0, 360, 360);
+
+      if (phase !== "done") {
+        drawAcorn();
+        oval(ctx, pig.x, pig.y + 5, 25, 17, "rgba(0,0,0,.12)");
+        drawPig(ctx, pig.x, pig.y, pig.angle, 1, walk);
+
+        if (phase === "eating") {
+          label(ctx, "ХРУМ!", pig.x, Math.max(25, pig.y - 40), 16);
+        }
+      }
+    }
+
+    function setTarget(point) {
+      var rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      input.x = clamp((point.clientX - rect.left) / rect.width * 360, 20, 340);
+      input.y = clamp((point.clientY - rect.top) / rect.height * 360, 20, 340);
+    }
+
+    // iPhone: нативные touch-события.
+    // passive:false позволяет предотвратить прокрутку внутри плитки.
+    var touchOptions = false;
+    try {
+      var options = Object.defineProperty({}, "passive", {
+        get: function () {
+          touchOptions = { passive: false };
+          return false;
+        }
+      });
+      var noop = function () {};
+      window.addEventListener("passive-test", noop, options);
+      window.removeEventListener("passive-test", noop, options);
+    } catch (error) {}
+
+    function findTouch(list, id) {
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].identifier === id) return list[i];
+      }
+      return null;
+    }
+
+    canvas.addEventListener("touchstart", function (event) {
+      lastTouch = Date.now();
+      if (event.cancelable) event.preventDefault();
+      if (phase === "done" || touchId !== null) return;
+
+      var touch = event.changedTouches[0];
+      if (!touch) return;
+
+      touchId = touch.identifier;
+      input.active = true;
+      setTarget(touch);
+    }, touchOptions);
+
+    canvas.addEventListener("touchmove", function (event) {
+      if (event.cancelable) event.preventDefault();
+      var touch = findTouch(event.touches, touchId);
+      if (touch) setTarget(touch);
+    }, touchOptions);
+
+    function endTouch(event) {
+      lastTouch = Date.now();
+      if (findTouch(event.changedTouches, touchId)) {
+        input.active = false;
+        touchId = null;
+      }
+    }
+
+    canvas.addEventListener("touchend", endTouch, false);
+    canvas.addEventListener("touchcancel", endTouch, false);
+
+    // Мышь — для компьютера.
+    canvas.addEventListener("mousedown", function (event) {
+      if (
+        event.button !== 0 ||
+        Date.now() - lastTouch < 800 ||
+        phase === "done"
+      ) return;
+
+      event.preventDefault();
+      canvas.focus();
+      mouseDown = true;
+      input.active = true;
+      setTarget(event);
+    }, false);
+
+    window.addEventListener("mousemove", function (event) {
+      if (mouseDown) setTarget(event);
+    }, false);
+
+    window.addEventListener("mouseup", function () {
+      if (mouseDown) {
+        mouseDown = false;
+        input.active = false;
+      }
+    }, false);
+
+    canvas.addEventListener("keydown", function (event) {
+      var code = event.keyCode;
+      if (code >= 37 && code <= 40) {
+        event.preventDefault();
+        keys[code] = true;
+      }
+    }, false);
+
+    window.addEventListener("keyup", function (event) {
+      delete keys[event.keyCode];
+    }, false);
+
+    canvas.addEventListener("blur", stopInput, false);
+    window.addEventListener("blur", stopInput, false);
+
+    document.addEventListener("visibilitychange", function () {
+      stopInput();
+      lastFrame = 0;
+    }, false);
+
+    canvas.addEventListener("contextmenu", function (event) {
+      event.preventDefault();
+    }, false);
+
+    el("skip").addEventListener("click", function () {
+      reset(level + 1);
+    }, false);
+
+    el("next").addEventListener("click", function () {
+      reset(level + 1);
+      window.scrollTo(0, 0);
+    }, false);
+
+    // Открытие выполняется непосредственно в обработчике нажатия:
+    // это важно для ограничений Safari на всплывающие окна.
+    el("save").addEventListener("click", function () {
+      if (phase !== "done") return;
+
+      var popup = window.open("", "_blank");
+
+      if (!popup) {
+        el("saveHint").textContent =
+          "Safari заблокировал новую вкладку. Разреши всплывающие окна " +
+          "для этой страницы и нажми ещё раз.";
+        return;
+      }
+
+      try {
+        var output = document.createElement("canvas");
+        output.width = output.height = 1440;
+        var outputCtx = output.getContext("2d");
+        outputCtx.scale(4, 4);
+        drawDesign(outputCtx, designs[level]);
+        var imageUrl = output.toDataURL("image/png");
+
+        popup.document.open();
+        popup.document.write(
+          '<!DOCTYPE html><html lang="ru"><head>' +
+          '<meta charset="UTF-8">' +
+          '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+          '<title>Сохранить рисунок</title>' +
+          '<style>' +
+          'body{margin:0;padding:20px;background:#eee;font-family:Arial;' +
+          'text-align:center;color:#111}' +
+          'p{font-size:14px;line-height:1.6}' +
+          'img{display:block;width:100%;max-width:720px;height:auto;' +
+          'margin:20px auto;background:white;-webkit-touch-callout:default}' +
+          'a{display:inline-block;padding:13px 20px;background:#111;' +
+          'color:white;text-decoration:none}' +
+          '</style></head><body>' +
+          '<p>Удерживай палец на рисунке и выбери сохранение в Фото.' +
+          '<br>Или воспользуйся кнопкой скачивания.</p>' +
+          '<img src="' + imageUrl + '" alt="Открытый рисунок">' +
+          '<a href="' + imageUrl + '" download="' +
+          designs[level].id + '.png">Скачать PNG</a>' +
+          '<p>Чтобы вернуться к игре, закрой эту вкладку.</p>' +
+          '</body></html>'
+        );
+        popup.document.close();
+      } catch (error) {
+        popup.close();
+        el("saveHint").textContent =
+          "Не удалось подготовить картинку. Попробуй открыть игру " +
+          "в отдельной вкладке Safari.";
+      }
+    }, false);
+
+    var requestFrame = window.requestAnimationFrame ||
+      window.webkitRequestAnimationFrame ||
+      function (callback) {
+        return window.setTimeout(function () {
+          callback(Date.now());
+        }, 16);
+      };
+
+    function loop(timestamp) {
+      var dt = lastFrame
+        ? Math.max(0, Math.min((timestamp - lastFrame) / 1000, 0.035))
+        : 0;
+
+      lastFrame = timestamp;
+      clock += dt;
+
+      if (phase === "reveal" || phase === "catch") {
+        movePig(dt);
+        moveAcorn(dt);
+
+        if (
+          phase === "catch" &&
+          distance(pig.x - acorn.x, pig.y - acorn.y) < 33
+        ) {
+          phase = "eating";
+          eatingTime = 0;
+          pig.angle = Math.atan2(acorn.y - pig.y, acorn.x - pig.x);
+        }
+      } else if (phase === "eating") {
+        eatingTime += dt;
+        if (eatingTime > 0.8) finish();
+      }
+
+      draw();
+      requestFrame.call(window, loop);
+    }
+
+    try {
+      reset(0);
+      el("bootNotice").style.display = "none";
+      requestFrame.call(window, loop);
+    } catch (error) {
+      el("bootNotice").style.display = "block";
+      el("bootNotice").textContent =
+        "Ошибка запуска: " + error.message +
+        ". Открой страницу в Safari и сообщи этот текст.";
+    }
+  })();
+  </script>
+</body>
+</html>
